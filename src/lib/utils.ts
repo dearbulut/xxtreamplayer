@@ -5,13 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-if (!process.env.NEXT_PUBLIC_IPTV_BASE_URL || !process.env.NEXT_PUBLIC_IPTV_USERNAME || !process.env.NEXT_PUBLIC_IPTV_PASSWORD) {
-  throw new Error('Missing IPTV configuration in environment variables')
-}
 
-const IPTV_BASE_URL = process.env.NEXT_PUBLIC_IPTV_BASE_URL
-const IPTV_USERNAME = process.env.NEXT_PUBLIC_IPTV_USERNAME
-const IPTV_PASSWORD = process.env.NEXT_PUBLIC_IPTV_PASSWORD
+
+const IPTV_BASE_URL = process.env.NEXT_PUBLIC_IPTV_BASE_URL!
+const IPTV_USERNAME = process.env.NEXT_PUBLIC_IPTV_USERNAME!
+const IPTV_PASSWORD = process.env.NEXT_PUBLIC_IPTV_PASSWORD!
 
 export async function fetchFromApi(action: string, params: Record<string, string> = {}) {
   const searchParams = new URLSearchParams({
