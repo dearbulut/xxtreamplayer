@@ -5,9 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const IPTV_BASE_URL = '***REMOVED***'
-export const IPTV_USERNAME = '***REMOVED***'
-export const IPTV_PASSWORD = '***REMOVED***'
+if (!process.env.NEXT_PUBLIC_IPTV_BASE_URL || !process.env.NEXT_PUBLIC_IPTV_USERNAME || !process.env.NEXT_PUBLIC_IPTV_PASSWORD) {
+  throw new Error('Missing IPTV configuration in environment variables')
+}
+
+const IPTV_BASE_URL = process.env.NEXT_PUBLIC_IPTV_BASE_URL
+const IPTV_USERNAME = process.env.NEXT_PUBLIC_IPTV_USERNAME
+const IPTV_PASSWORD = process.env.NEXT_PUBLIC_IPTV_PASSWORD
 
 export async function fetchFromApi(action: string, params: Record<string, string> = {}) {
   const searchParams = new URLSearchParams({
@@ -15,8 +19,7 @@ export async function fetchFromApi(action: string, params: Record<string, string
     password: IPTV_PASSWORD,
     action,
     ...params
-  })
-  console.log(IPTV_BASE_URL);
+  });
   const response = await fetch(`${IPTV_BASE_URL}/player_api.php?${searchParams}`)
   if (!response.ok) {
     throw new Error('Failed to fetch data')
@@ -25,11 +28,11 @@ export async function fetchFromApi(action: string, params: Record<string, string
 }
 
 export async function getStreamUrl(type: 'live' | 'movie' | 'series', id: number) {
-  const url = `${IPTV_BASE_URL}/${type}/${IPTV_USERNAME}/${IPTV_PASSWORD}/${id}.m3u8`;
+  const url = `${process.env.NEXT_PUBLIC_IPTV_BASE_URL}/${type}/${process.env.NEXT_PUBLIC_IPTV_USERNAME}/${process.env.NEXT_PUBLIC_IPTV_PASSWORD}/${id}.m3u8`;
   if (type === 'live') {
     return url;
   }
-  const proxyUrl = `http://${process.env.SITE_URL}/api/stream?url=${url}`;
+  const proxyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/stream?url=${url}`;
   
   const response = await fetch(proxyUrl);
   const data = await response.json();
@@ -42,8 +45,8 @@ export async function getStreamUrlServer(movieId: string): Promise<string> {
 }
 
 export async function getEPGData() {
-  const epgUrl = `${IPTV_BASE_URL}/xmltv.php?username=${IPTV_USERNAME}&password=${IPTV_PASSWORD}`;
-  const proxyUrl = `http://${process.env.SITE_URL}/api/epg`;
+  const epgUrl = `${process.env.NEXT_PUBLIC_IPTV_BASE_URL}/xmltv.php?username=${process.env.NEXT_PUBLIC_IPTV_USERNAME}&password=${process.env.NEXT_PUBLIC_IPTV_PASSWORD}`;
+  const proxyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/epg`;
   const response = await fetch(proxyUrl);
   const data = await response.json();
   return data;

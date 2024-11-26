@@ -46,7 +46,6 @@ interface MovieDetails {
 async function getMovieDetails(id: string): Promise<MovieDetails> {
   try {
     const movie = await fetchFromApi('get_vod_info', { vod_id: id });
-    console.log('Movie data:', movie);
     
     if (!movie || !movie.movie_data) {
       throw new Error('Invalid movie data received from API');

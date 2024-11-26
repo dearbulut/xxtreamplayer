@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { fetchFromApi, getStreamUrl } from '@/lib/utils';
 import { VideoPlayer } from './video-player';
-import {  Tv } from 'lucide-react';
+import { Tv } from 'lucide-react';
 import Image from 'next/image';
 import {
   Select,
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from './ui/alert';
+import { AlertTriangle } from 'lucide-react';
+
 interface Channel {
   num: number;
   name: string;
@@ -35,44 +38,81 @@ interface Category {
   parent_id: number;
 }
 
-export async function LiveChannels() {
+export function LiveChannels() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [streamUrl, setStreamUrl] = useState<string>('');
+  const [isChrome, setIsChrome] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
+    // Check if browser is Chrome
+    const userAgent = window.navigator.userAgent;
+    setIsChrome(userAgent.indexOf("Chrome") > -1);
+  }, []);
+
+  // Fetch categories first
+  useEffect(() => {
+    async function fetchCategories() {
       try {
-        const [categoriesData, channelsData] = await Promise.all([
-          fetchFromApi('get_live_categories'),
-          fetchFromApi('get_live_streams')
-        ]);
+        const categoriesData = await fetchFromApi('get_live_categories');
         setCategories(categoriesData);
+        if (categoriesData.length > 0) {
+          setSelectedCategory(categoriesData[0].category_id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Fetch channels when category changes
+  useEffect(() => {
+    async function fetchChannels() {
+      if (!selectedCategory) return;
+      
+      setLoading(true);
+      try {
+        const channelsData = await fetchFromApi('get_live_streams', {
+          category_id: selectedCategory
+        });
         setChannels(channelsData);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch channels:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
-  }, []);
+    fetchChannels();
+  }, [selectedCategory]);
 
-  const filteredChannels = selectedCategory === 'all'
-    ? channels
-    : channels.filter(channel => channel.category_id === selectedCategory);
+  useEffect(() => {
+    async function fetchStreamUrl() {
+      if (selectedChannel) {
+        try {
+          const url = await getStreamUrl('live', selectedChannel.stream_id);
+          setStreamUrl(url);
+        } catch (error) {
+          console.error('Failed to fetch stream URL:', error);
+        }
+      }
+    }
+    fetchStreamUrl();
+  }, [selectedChannel]);
 
   const searchedChannels = searchQuery
-    ? filteredChannels.filter(channel =>
+    ? channels.filter(channel =>
         channel.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : filteredChannels;
+    : channels;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[350px,1fr] md:grid-cols-[300px,1fr] gap-4 md:gap-6 p-4">
+      
       <div className="flex flex-col space-y-4">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <div className="p-4 space-y-4">
@@ -84,7 +124,6 @@ export async function LiveChannels() {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.category_id} value={category.category_id}>
                     {category.category_name}
@@ -123,18 +162,7 @@ export async function LiveChannels() {
                       selectedChannel?.stream_id === channel.stream_id ? 'bg-accent' : ''
                     }`}
                   >
-                    {channel.stream_icon ? (
-                      <div className="relative w-8 h-8 flex-shrink-0">
-                        <Image
-                          src={channel.stream_icon}
-                          alt={channel.name}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <Tv className="w-8 h-8 flex-shrink-0" />
-                    )}
+                    <Tv className="w-8 h-8 flex-shrink-0" />
                     <span className="text-sm text-left line-clamp-2">{channel.name}</span>
                   </button>
                 ))
@@ -145,12 +173,21 @@ export async function LiveChannels() {
       </div>
 
       <div className="space-y-4">
+      {isChrome && (
+        <Alert variant="destructive" className="bg-yellow-50 dark:bg-yellow-900/20">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Some channels may not work properly in Chrome. For the best experience, consider using Firefox or another browser.
+          </AlertDescription>
+        </Alert>
+      )}
         {selectedChannel ? (
           <>
             <div className="rounded-lg overflow-hidden">
-              <VideoPlayer
-                src={await getStreamUrl('live', selectedChannel.stream_id)}
-              />
+              <VideoPlayer 
+              src={streamUrl}
+              autoPlay={true}
+               />
             </div>
             <h2 className="text-xl md:text-2xl font-bold">{selectedChannel.name}</h2>
           </>

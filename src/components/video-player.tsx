@@ -249,8 +249,9 @@ export function VideoPlayer({ src, poster, autoPlay = false, isDirectMp4 = false
     };
     const handleDurationChange = () => {
       setDuration(video.duration);
-      console.log('Video length successfully loaded:', video.duration, 'seconds');
-      setIsBuffering(false);
+      if(isDirectMp4) {
+        setIsBuffering(false);
+      }
     };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
