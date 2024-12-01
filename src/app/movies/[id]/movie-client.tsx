@@ -1,13 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { VlcPlayer } from '@/components/vlc-player';
 import { Film, Star, Video } from 'lucide-react';
 import { VideoPlayer } from '@/components/video-player';
-import { VideoJSPlayer } from '@/components/video-js-player';
 
 interface MovieInfo {
   movie_image: string;
