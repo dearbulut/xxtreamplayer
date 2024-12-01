@@ -1,8 +1,7 @@
 "use server";
 import { SignJWT, jwtVerify } from 'jose';
-import { config } from './config';
 
-const secretKey = new TextEncoder().encode(config.JWT_SECRET);
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
