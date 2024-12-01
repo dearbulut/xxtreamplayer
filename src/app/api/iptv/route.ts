@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     if (action === 'get_stream_url') {
-      const streamId = params.stream_id
+      const streamId = parseInt(params.stream_id)
       const streamType = params.type as 'live' | 'movie' | 'series'
       
       if (!streamId || !streamType) {

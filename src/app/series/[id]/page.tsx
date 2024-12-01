@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { fetchFromApi, getStreamUrl } from '@/lib/utils';
+import { fetchFromApi, getStreamUrl } from '@/lib/api';
 import { VideoPlayer } from '@/components/video-player';
 import { Film } from 'lucide-react';
 import Image from 'next/image';
@@ -104,7 +104,7 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
         {selectedEpisode ? (
           <div className="rounded-lg overflow-hidden">
             <VideoPlayer
-              src={getStreamUrl('series', selectedEpisode.id)}
+              src={getStreamUrl( selectedEpisode.id, 'series')}
               poster={selectedEpisode.info?.movie_image || series.cover}
             />
           </div>

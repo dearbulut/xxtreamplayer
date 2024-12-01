@@ -1,27 +1,28 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import { fetchFromServerApi } from '@/lib/server-api';
 
-import { XMLParser } from 'fast-xml-parser';
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const stream_id = searchParams.get('stream_id');
 
-const IPTV_BASE_URL = '***REMOVED***'
-const IPTV_USERNAME = '***REMOVED***'
-const IPTV_PASSWORD = '***REMOVED***'
+  if (!stream_id) {
+    return NextResponse.json(
+      { error: 'Channel ID is required' },
+      { status: 400 }
+    );
+  }
 
-export async function GET() {
   try {
-    const epgUrl = `${IPTV_BASE_URL}/xmltv.php?username=${IPTV_USERNAME}&password=${IPTV_PASSWORD}`;
-    const response = await axios.get(epgUrl);
-    
-    // Parse XML to JSON
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: "_"
+    const epgData = await fetchFromServerApi('get_simple_data_table', {
+      stream_id: stream_id
     });
-    const jsonData = parser.parse(response.data);
-    
-    return NextResponse.json(jsonData);
+
+    return NextResponse.json(epgData);
   } catch (error) {
-    console.error('EPG fetch error:', error);
-    return new Response('Failed to fetch EPG data', { status: 500 });
+    console.error('Error fetching EPG data:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch EPG data' },
+      { status: 500 }
+    );
   }
 }

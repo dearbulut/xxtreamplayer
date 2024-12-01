@@ -4,7 +4,9 @@ import { encrypt } from '@/lib/cryptography';
 import { checkPassword } from '@/lib/utils';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
-
+import { getActiveProfileByUserId } from '@/db/queries';
+import { setServerActiveProfile } from '@/lib/server-profile';
+ 
 export async function POST(request: Request) {
   const { email, password } = await request.json();
 
@@ -27,8 +29,13 @@ export async function POST(request: Request) {
     path: '/',
   });
 
+  const activeProfile = await getActiveProfileByUserId(user.id);
+  if (activeProfile) {
+    setServerActiveProfile(activeProfile);
+  }
+  
   // Return token for client-side storage
-  return new Response(JSON.stringify({ token }), {
+  return new Response(JSON.stringify({ token, activeProfile }), {
     headers: { 'Content-Type': 'application/json' },
   });
 }

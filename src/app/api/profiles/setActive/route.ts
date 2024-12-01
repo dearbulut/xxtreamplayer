@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getProfileById, updateProfile } from '@/db/queries';
+import { setServerActiveProfile } from '@/lib/server-profile';
 
 export async function POST(request: Request) {
     const session = await getSession();
@@ -12,18 +13,20 @@ export async function POST(request: Request) {
     try {
         const { profileId } = await request.json();
 
-        // First, set all profiles for this user to inactive
-        const profile = await getProfileById(profileId)
-
-        // Then set the selected profile as active
-        
-        if (!profile) {
+        // Get profile and verify ownership
+        const profile = await getProfileById(profileId);
+        if (!profile || profile.userId !== session.id) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
         profile.isActive = true;
+        // Update database
         await updateProfile(profile);
 
-        return NextResponse.json({ success: true });
+        // Set server-side active profile
+        //await setServerActiveProfile(profile);
+
+        // Return full profile data for client-side storage
+        return NextResponse.json(profile);
     } catch (error) {
         console.error('Error setting active profile:', error);
         return NextResponse.json(

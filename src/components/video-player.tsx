@@ -4,13 +4,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { VideoControls } from './video-controls';
 import { Loader2 } from 'lucide-react';
+import { VideoPlayerProps } from '@/types';
 
-interface VideoPlayerProps {
-  src: string | Promise<string>;
-  poster?: string;
-  autoPlay?: boolean;
-  isDirectMp4?: boolean;
-}
+
 
 export function VideoPlayer({ src, poster, autoPlay = false, isDirectMp4 = false }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);

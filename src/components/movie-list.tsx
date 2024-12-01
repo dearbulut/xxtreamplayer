@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchFromApi } from '@/lib/utils';
+import { fetchFromApi } from '@/lib/api';
 import { Film } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

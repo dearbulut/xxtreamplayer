@@ -1,36 +1,54 @@
-import { headers } from 'next/headers'
+"use client";
 
-if (!process.env.NEXT_PUBLIC_IPTV_BASE_URL || !process.env.NEXT_PUBLIC_IPTV_USERNAME || !process.env.NEXT_PUBLIC_IPTV_PASSWORD) {
-  throw new Error('Missing IPTV configuration in environment variables')
-}
+import { getActiveProfile } from "./client-profile";
 
-const IPTV_BASE_URL = process.env.NEXT_PUBLIC_IPTV_BASE_URL
-const IPTV_USERNAME = process.env.NEXT_PUBLIC_IPTV_USERNAME
-const IPTV_PASSWORD = process.env.NEXT_PUBLIC_IPTV_PASSWORD
-
-export async function fetchFromApi(action: string, params: Record<string, string> = {}) {
-  const searchParams = new URLSearchParams({
-    username: IPTV_USERNAME,
-    password: IPTV_PASSWORD,
-    ...params,
-  })
-
-  const response = await fetch(`${IPTV_BASE_URL}/player_api.php?action=${action}&${searchParams.toString()}`)
-  
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`)
+function getIPTVCredentials() {
+  const activeProfile = getActiveProfile();
+  console.log('Active profile:', activeProfile);
+  if (activeProfile) {
+    return {
+      baseUrl: activeProfile.iptvUrl,
+      username: activeProfile.iptvUsername,
+      password: activeProfile.iptvPassword
+    };
   }
 
-  return response.json()
+  // Fallback to environment variables
+  return {
+    baseUrl: process.env.NEXT_PUBLIC_IPTV_BASE_URL,
+    username: process.env.NEXT_PUBLIC_IPTV_USERNAME,
+    password: process.env.NEXT_PUBLIC_IPTV_PASSWORD
+  };
+}
+
+export async function fetchFromApi(action: string, params: Record<string, string> = {}) {
+  const { baseUrl, username, password } = getIPTVCredentials();
+
+  if (!baseUrl || !username || !password) {
+    throw new Error('Missing IPTV credentials');
+  }
+
+  const searchParams = new URLSearchParams({
+    username,
+    password,
+    ...params,
+  });
+
+  const response = await fetch(`${baseUrl}/player_api.php?action=${action}&${searchParams.toString()}`);
+  
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`);
+  }
+
+  return response.json();
 }
 
 export async function getStreamUrl(streamId: number, streamType: 'live' | 'movie' | 'series') {
-  const searchParams = new URLSearchParams({
-    username: IPTV_USERNAME,
-    password: IPTV_PASSWORD,
-    stream_id: streamId.toString(),
-    type: streamType,
-  })
+  const { baseUrl, username, password } = getIPTVCredentials();
 
-  return `${IPTV_BASE_URL}/${streamType}/${IPTV_USERNAME}/${IPTV_PASSWORD}/${streamId}.m3u8`
+  if (!baseUrl || !username || !password) {
+    throw new Error('Missing IPTV credentials');
+  }
+
+  return `${baseUrl}/${streamType}/${username}/${password}/${streamId}.m3u8`;
 }

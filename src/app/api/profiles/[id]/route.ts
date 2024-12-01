@@ -4,16 +4,16 @@ import { deleteProfile, getProfileById } from '@/db/queries';
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     const session = await getSession();
-    
+    const { id } = await context.params;
     if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        const profileId = parseInt(params.id);
+        const profileId = parseInt(id);
         const profile = await getProfileById(profileId);
 
         if (!profile) {

@@ -1,15 +1,26 @@
-import {  NextResponse } from 'next/server';
-import axios from 'axios';
+import { NextResponse } from 'next/server';
+import { getServerStreamUrl } from '@/lib/server-api';
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const streamId = searchParams.get('stream_id');
+  const streamType = searchParams.get('stream_type') as 'live' | 'movie' | 'series';
+
+  if (!streamId || !streamType) {
+    return NextResponse.json(
+      { error: 'Stream ID and type are required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    
-    const { searchParams } = new URL(req.url);
-    const m3u8Url = searchParams.get('url') as string; // Pass the m3u8 URL as a query parameter
-    const response = await axios.get(m3u8Url, { responseType: 'stream', maxRedirects: 5 });
-    return NextResponse.json({ url: response.data?.responseUrl });
+    const streamUrl = await getServerStreamUrl(Number(streamId), streamType);
+    return NextResponse.json({ url: streamUrl });
   } catch (error) {
-    console.error(error);
-    return new Response('Failed to fetch the m3u8 file', { status: 500 });
+    console.error('Error getting stream URL:', error);
+    return NextResponse.json(
+      { error: 'Failed to get stream URL' },
+      { status: 500 }
+    );
   }
 }

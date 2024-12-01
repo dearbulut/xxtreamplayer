@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { setClientSession } from '@/lib/client-auth';
+import { setActiveProfile } from '@/lib/client-profile';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -29,6 +30,7 @@ export function LoginForm() {
       if (res.ok) {
         const data = await res.json();
         setClientSession(data.token);
+        setActiveProfile(data.activeProfile);
         router.push('/');
         router.refresh();
       } else {

@@ -1,10 +1,18 @@
 import { NewProfile, NewUser, Profile, profiles, User, users } from '@/db/schema';
 import { db } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 
 export const getProfileById = async (id: number) : Promise<Profile | null> => {   
     return await db.query.profiles.findFirst({  
         where: eq(profiles.id, id),
+    }) ?? null;
+}
+export const getActiveProfileByUserId = async (userId: number) : Promise<Profile | null> => {   
+    return await db.query.profiles.findFirst({  
+        where: (
+            eq(profiles.userId, userId),
+            eq(profiles.isActive, true)
+        ),
     }) ?? null;
 }
 
@@ -32,7 +40,21 @@ export const getProfilesByUserId = async (userId: number) : Promise<Profile[]> =
     });
 }
 
+export const deactivateOtherProfiles = async (userId: number, activeProfileId: number) => {
+    return await db.update(profiles)
+        .set({ isActive: false })
+        .where(
+            eq(profiles.userId, userId) && 
+            ne(profiles.id, activeProfileId)  
+        );
+}
+
 export const updateProfile = async (profile: Profile) => {
+    if (profile.isActive) {
+        // First, deactivate all other profiles for this user
+        await deactivateOtherProfiles(profile.userId, profile.id);
+    }
+    
     return await db.update(profiles)
         .set({
             name: profile.name,
