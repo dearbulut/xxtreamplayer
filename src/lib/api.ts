@@ -24,13 +24,13 @@ export async function fetchFromApi(action: string, params: Record<string, string
   return response.json()
 }
 
-export async function getStreamUrl(streamId: string, streamType: 'live' | 'movie' | 'series') {
+export async function getStreamUrl(streamId: number, streamType: 'live' | 'movie' | 'series') {
   const searchParams = new URLSearchParams({
     username: IPTV_USERNAME,
     password: IPTV_PASSWORD,
-    stream_id: streamId,
+    stream_id: streamId.toString(),
     type: streamType,
   })
 
-  return `${IPTV_BASE_URL}/live/${IPTV_USERNAME}/${IPTV_PASSWORD}/${streamId}.m3u8`
+  return `${IPTV_BASE_URL}/${streamType}/${IPTV_USERNAME}/${IPTV_PASSWORD}/${streamId}.m3u8`
 }

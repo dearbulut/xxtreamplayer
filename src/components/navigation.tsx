@@ -1,10 +1,22 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { Tv, Film, Video } from 'lucide-react';
+import { Tv, Film, Video, User, LogOut } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { Logo } from './logo';
+import { useRouter } from 'next/navigation';
+import { clearSession } from '@/lib/client-auth';
+import { cookies } from 'next/headers';
 
 export function Navigation() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await clearSession();
+    router.push('/login');
+  };
+
   return (
     <nav className="border-b">
       <div className="container mx-auto px-4">
@@ -32,9 +44,26 @@ export function Navigation() {
                   <span>Series</span>
                 </Link>
               </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/profiles" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>Profiles</span>
+                </Link>
+              </Button>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="sr-only">Logout</span>
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

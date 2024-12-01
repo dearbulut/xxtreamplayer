@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { setClientSession } from '@/lib/client-auth';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,8 @@ export function LoginForm() {
       });
 
       if (res.ok) {
+        const data = await res.json();
+        setClientSession(data.token);
         router.push('/');
         router.refresh();
       } else {

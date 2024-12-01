@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchFromApi, getStreamUrl } from '@/lib/utils';
+import { fetchFromApi, getStreamUrl } from '@/lib/api';
 import { VideoPlayer } from './video-player';
 import { Tv } from 'lucide-react';
 import Image from 'next/image';
@@ -94,7 +94,7 @@ export function LiveChannels() {
     async function fetchStreamUrl() {
       if (selectedChannel) {
         try {
-          const url = await getStreamUrl('live', selectedChannel.stream_id);
+          const url = await getStreamUrl( selectedChannel.stream_id,'live');
           setStreamUrl(url);
         } catch (error) {
           console.error('Failed to fetch stream URL:', error);
