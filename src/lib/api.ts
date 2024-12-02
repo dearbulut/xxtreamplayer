@@ -4,7 +4,6 @@ import { getActiveProfile } from "./client-profile";
 
 function getIPTVCredentials() {
   const activeProfile = getActiveProfile();
-  console.log('Active profile:', activeProfile);
   if (activeProfile) {
     return {
       baseUrl: activeProfile.iptvUrl,
@@ -51,4 +50,29 @@ export async function getStreamUrl(streamId: number, streamType: 'live' | 'movie
   }
 
   return `${baseUrl}/${streamType}/${username}/${password}/${streamId}.m3u8`;
+}
+
+export async function verifyIPTVCredentials(url: string, username: string, password: string) {
+  try {
+    const searchParams = new URLSearchParams({
+      username,
+      password,
+    });
+
+    const response = await fetch(`${url}/player_api.php?${searchParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error('Invalid IPTV credentials');
+    }
+    
+    const data = await response.json();
+    if (!data || data.user_info?.auth === 0) {
+      throw new Error('Invalid IPTV credentials');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error verifying IPTV credentials:', error);
+    return false;
+  }
 }

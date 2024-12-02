@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { setClientSession } from '@/lib/client-auth';
 import { setActiveProfile } from '@/lib/client-profile';
+import { toast } from 'sonner';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -30,15 +31,24 @@ export function LoginForm() {
       if (res.ok) {
         const data = await res.json();
         setClientSession(data.token);
+
+        if(!data.activeProfile){
+          toast.error('No active profile found');
+          router.push('/profiles');
+          return;}
         setActiveProfile(data.activeProfile);
+        toast.success('Login successful');
         router.push('/');
-        router.refresh();
       } else {
         const data = await res.json();
-        setError(data.message || 'Invalid email or password');
+        const errorMessage = data.message || 'Invalid email or password';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      const errorMessage = 'An error occurred. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

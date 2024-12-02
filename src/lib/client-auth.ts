@@ -15,8 +15,6 @@ export async function getClientSession() {
   }
   
   try {
-    const session = await decrypt(token);
-    console.log(session);
     return await decrypt(token);
   } catch (error) {
     return null;
@@ -38,26 +36,10 @@ export async function clearSession() {
   });
 }
 
-export async function setActiveProfile(profileId: number) {
+export async function setActiveProfile(profileData: any) {
   try {
-    const response = await fetch('/api/profiles/setActive', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ profileId }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to set active profile');
-    }
-
-    // Get updated session token from response cookies
-    const data = await response.json();
-    if (data.token) {
-      setClientSession(data.token);
-    }
-
+    // Update local storage with the active profile
+    localStorage.setItem('activeProfile', JSON.stringify(profileData));
     return true;
   } catch (error) {
     console.error('Error setting active profile:', error);
