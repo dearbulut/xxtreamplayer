@@ -59,8 +59,8 @@ The player supports all standard Xtream Codes API endpoints including:
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
-cd IPTVPlayer
+git clone https://github.com/BifrostBuilder/xtream-player.git
+cd xtream-player
 ```
 
 2. Install dependencies:
@@ -76,7 +76,12 @@ JWT_SECRET="your-jwt-secret"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
 
-4. Run the development server:
+4. Push the database schema:
+```bash
+npm run db:push
+```
+
+5. Run the development server:
 ```bash
 npm run dev
 ```
