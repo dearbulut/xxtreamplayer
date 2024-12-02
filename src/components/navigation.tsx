@@ -7,7 +7,6 @@ import { ThemeToggle } from './theme-toggle';
 import { Logo } from './logo';
 import { useRouter } from 'next/navigation';
 import { clearSession } from '@/lib/client-auth';
-import { cookies } from 'next/headers';
 
 export function Navigation() {
   const router = useRouter();
