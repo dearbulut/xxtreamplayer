@@ -12,7 +12,6 @@ export async function GET() {
     try {
         
         const profiles = await getProfilesByUserId(session?.id || 0);
-        console.log("profs: "+profiles);
         return NextResponse.json(profiles);
     } catch (error) {
         console.error('Error fetching profiles:', error);
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
             name,
             iptvUsername,
             iptvPassword,
-            userId: session.user?.id || userId,
+            userId: session.id || userId,
             iptvUrl,
             isActive
         });

@@ -18,7 +18,6 @@ export function VideoJSPlayer({ src, poster, autoPlay = false, onReady }: VideoJ
   const playerRef = useRef<Player | null>(null);
 
   const getSourceType = (url: string) => {
-    console.log("getSourceType: "+url);
     if (!url || typeof url !== 'string') return 'video/mp4';
     return url.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4';
   };

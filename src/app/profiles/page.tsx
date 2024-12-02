@@ -14,8 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Profile, NewProfile } from '@/db/schema';
-import { getClientSession } from '@/lib/client-auth';
+import { getClientSession, setClientSession } from '@/lib/client-auth';
 import { Check, Trash2 } from "lucide-react";
+import { toast } from 'sonner';
+import { verifyIPTVCredentials } from '@/lib/api';
 
 interface ProfileFormData extends Omit<NewProfile, 'id' | 'userId' | 'createdAt'> {}
 
@@ -37,12 +39,12 @@ export default function Profiles() {
         iptvPassword: '',
     });
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         const initializeUser = async () => {
             const session = await getClientSession();
-            console.log(session);
             if (session) {
                 setUser(session);
                 await fetchProfiles();
@@ -68,7 +70,6 @@ export default function Profiles() {
             }
 
             const data = await response.json();
-            console.log(data);
             setProfiles(data);
             setActiveProfileId(data.activeProfileId);
         } catch (error) {
@@ -86,62 +87,86 @@ export default function Profiles() {
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleCreateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        
         try {
+            setIsLoading(true);
+            
+            // First verify the IPTV credentials using the utility function
+            const isValid = await verifyIPTVCredentials(
+                formData.iptvUrl,
+                formData.iptvUsername,
+                formData.iptvPassword
+            );
+            
+            if (!isValid) {
+                toast.error('Invalid IPTV credentials. Please check your URL, username, and password.');
+                return;
+            }
+
             const response = await fetch('/api/profiles', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({
-                    ...formData,
-                    userId: user?.id
-                }),
+                body: JSON.stringify(formData),
             });
 
-            if (response.status === 401) {
-                router.push('/login');
-                return;
-            }
-
             if (response.ok) {
-                setIsDialogOpen(false);
+                toast.success('Profile created successfully');
                 setFormData({
                     name: '',
                     iptvUrl: '',
                     iptvUsername: '',
                     iptvPassword: '',
                 });
+                setIsDialogOpen(false);
                 await fetchProfiles();
+                router.refresh();
+            } else {
+                const data = await response.json();
+                toast.error(data.message || 'Failed to create profile');
             }
         } catch (error) {
             console.error('Error creating profile:', error);
+            toast.error('Failed to create profile');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const setActiveProfile = async (profileId: number) => {
+    const handleSetActiveProfile = async (profileId: number) => {
         try {
+            setIsLoading(true);
             const response = await fetch('/api/profiles/setActive', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({ profileId }),
             });
 
-            if (response.status === 401) {
-                router.push('/login');
-                return;
-            }
-
             if (response.ok) {
+                const data = await response.json();
+                if (data.token) {
+                    setClientSession(data.token);
+                }
                 setActiveProfileId(profileId);
+                const activeProfile = profiles.find(p => p.id === profileId);
+                if (activeProfile) {
+                    localStorage.setItem('activeProfile', JSON.stringify(activeProfile));
+                }
+                toast.success('Active profile updated successfully');
+                router.push("/");
+                router.refresh();
             }
         } catch (error) {
             console.error('Error setting active profile:', error);
+            toast.error('Failed to set active profile');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -187,7 +212,7 @@ export default function Profiles() {
                                 Fill in the details to create a new IPTV profile.
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleCreateProfile} className="space-y-4">
                             <input type="hidden" name="userId" value={user?.id} />
                             <div className="space-y-2">
                                 <Label htmlFor="name">Profile Name</Label>
@@ -252,7 +277,7 @@ export default function Profiles() {
                             <p className="text-sm text-gray-500 mb-4">URL: {profile.iptvUrl}</p>
                             <div className="flex gap-2">
                                 <Button
-                                    onClick={() => setActiveProfile(profile.id)}
+                                    onClick={() => handleSetActiveProfile(profile.id)}
                                     variant={profile.isActive ? "secondary" : "outline"}
                                     className="flex-1"
                                 >
