@@ -26,10 +26,12 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
       try {
         const seriesData = await fetchFromApi(`get_series_info&series_id=${params.id}`);
         setSeries(seriesData);
+        console.log("API Response:", seriesData); // Log the API response
 
         // Format the series data into the desired JSON structure
         const formatted = formatSeriesData(seriesData);
         setFormattedSeries(formatted);
+        console.log("Formatted JSON:", formatted); // Log the formatted JSON
 
          // Select first episode of first season by default
         if (formatted && formatted.seasons && formatted.seasons[0] && formatted.seasons[0].episodes[0]) {
