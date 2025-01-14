@@ -92,6 +92,12 @@ export function VideoPlayer({ src, poster, autoPlay = false, isDirectMp4 = false
         setError('Failed to load video');
         setIsBuffering(false);
       };
+      // Add codec support for other formats
+      video.addEventListener('loadedmetadata', () => {
+        if (!video.canPlayType('video/mp4; codecs="avc1.64001e, mp4a.40.2"')) {
+          setError('Unsupported video or audio codec');
+        }
+      });
       
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS support (Safari)
@@ -101,10 +107,10 @@ export function VideoPlayer({ src, poster, autoPlay = false, isDirectMp4 = false
       hlsInstance = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 600,
-        manifestLoadingMaxRetry: MAX_MANIFEST_RETRIES,
-        manifestLoadingRetryDelay: 2000, // 2 seconds delay between retries
+        maxBufferLength: 60,
+        maxMaxBufferLength: 1200,
+        manifestLoadingMaxRetry: 10, // Increase max retries
+        manifestLoadingRetryDelay: 5000, // 5 seconds delay between retries
         xhrSetup: function(xhr, url) {
           //console.log('Loading URL:', url);
           // Increase timeout for slow streams

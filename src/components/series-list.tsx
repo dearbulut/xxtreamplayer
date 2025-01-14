@@ -1,17 +1,52 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchFromApi } from '@/lib/api';
-import { Film } from 'lucide-react';
+import { fetchFromApi, getSeriesInfo } from '@/lib/api';
+import { Film, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Series, Category } from '@/types';
+import { Series, Category, Season, Episode } from '@/types';
 
 export function SeriesList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [series, setSeries] = useState<Series[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedSeries, setExpandedSeries] = useState<number | null>(null);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
+  const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
+
+  const handleSeriesClick = async (seriesId: number) => {
+  const handleSeasonClick = (seasonNumber: number) => { 
+    if (expandedSeason === seasonNumber) { 
+      setExpandedSeason(null); 
+    } else { 
+      setExpandedSeason(seasonNumber); 
+    } 
+  };
+    if (expandedSeries === seriesId) {
+      setExpandedSeries(null);
+      setExpandedSeason(null);
+      return;
+    }
+
+    setExpandedSeries(seriesId);
+    setExpandedSeason(null);
+    setExpandedSeason(null);
+    const seriesInfo = await getSeriesInfo(seriesId);
+    setSeasons(seriesInfo.seasons || []);
+    setEpisodes(seriesInfo.episodes || []);
+  };
+
+  const handleSeasonClick = (seasonNumber: number) => {
+    if (expandedSeason === seasonNumber) {
+      setExpandedSeason(null);
+    } else {
+      setExpandedSeason(seasonNumber);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -89,6 +124,36 @@ export function SeriesList() {
               )}
             </div>
             <div className="p-3 space-y-1">
+                {expandedSeries === series.series_id && ( 
+                  <div className="mt-2 space-y-2"> 
+                    {seasons.map((season) => ( 
+                      <div key={season.season_number} className="space-y-1"> 
+                        <button 
+                          onClick={() => handleSeasonClick(season.season_number)} 
+                          className="flex items-center justify-between w-full p-2 bg-secondary rounded-md" 
+                        > 
+                          <span>Season {season.season_number}</span> 
+                          {expandedSeason === season.season_number ? ( 
+                            <ChevronUp className="w-4 h-4" /> 
+                          ) : ( 
+                            <ChevronDown className="w-4 h-4" /> 
+                          )} 
+                        </button> 
+                        {expandedSeason === season.season_number && ( 
+                          <div className="pl-4 space-y-1"> 
+                            {episodes 
+                              .filter((episode) => episode.season === season.season_number) 
+                              .map((episode) => ( 
+                                <div key={episode.id} className="p-2 bg-muted rounded-md"> 
+                                  <p className="text-sm">{episode.title}</p> 
+                                </div> 
+                              ))} 
+                          </div> 
+                        )} 
+                      </div> 
+                    ))} 
+                  </div> 
+                )}
               <h3 className="font-medium line-clamp-2">{series.name}</h3>
               {series.rating && (
                 <div className="flex items-center text-sm text-muted-foreground">
