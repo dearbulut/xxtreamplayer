@@ -16,7 +16,6 @@ export function SeriesList() {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
-  const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
 
   const handleSeriesClick = async (seriesId: number) => {
   const handleSeasonClick = (seasonNumber: number) => { 
