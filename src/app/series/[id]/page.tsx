@@ -18,17 +18,23 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
   const [selectedEpisode, setSelectedEpisode] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [formattedSeries, setFormattedSeries] = useState<any>(null);
+
 
   useEffect(() => {
     async function fetchData() {
       try {
         const seriesData = await fetchFromApi(`get_series_info&series_id=${params.id}`);
         setSeries(seriesData);
-        
-        // Select first episode of first season by default
-        if (seriesData.seasons && seriesData.seasons[0] && seriesData.seasons[0].episodes[0]) {
+
+        // Format the series data into the desired JSON structure
+        const formatted = formatSeriesData(seriesData);
+        setFormattedSeries(formatted);
+
+         // Select first episode of first season by default
+        if (formatted && formatted.seasons && formatted.seasons[0] && formatted.seasons[0].episodes[0]) {
           setSelectedSeason(1);
-          setSelectedEpisode(seriesData.seasons[0].episodes[0]);
+          setSelectedEpisode(formatted.seasons[0].episodes[0]);
         }
       } catch (error) {
         console.error('Failed to fetch series data:', error);
@@ -39,7 +45,38 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
     fetchData();
   }, [params.id]);
 
-  if (loading || !series) {
+  // Function to format the series data
+  const formatSeriesData = (data: any) => {
+    if (!data) return null;
+
+    const formattedData = {
+      series_id: data.series_id,
+      name: data.name,
+      cover: data.cover,
+      plot: data.plot,
+      cast: data.cast,
+      director: data.director,
+      genre: data.genre,
+      rating: data.rating,
+      seasons: [] as any[],
+    };
+
+    if (data.seasons) {
+      formattedData.seasons = data.seasons.map((season: any) => ({
+        season_number: season.season_number,
+        episodes: season.episodes.map((episode: any) => ({
+          id: episode.id,
+          episode_num: episode.episode_num,
+          title: episode.title,
+          info: episode.info,
+        })),
+      }));
+    }
+    return formattedData;
+  };
+
+
+  if (loading || !formattedSeries) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -52,10 +89,10 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
       <div className="grid grid-cols-1 md:grid-cols-[300px,1fr] gap-6">
         {/* Series poster */}
         <div className="relative aspect-[2/3] md:aspect-auto">
-          {series.cover ? (
+          {formattedSeries.cover ? (
             <Image
-              src={series.cover}
-              alt={series.name}
+              src={formattedSeries.cover}
+              alt={formattedSeries.name}
               fill
               className="object-cover rounded-lg"
             />
@@ -68,32 +105,32 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
 
         {/* Series info */}
         <div className="space-y-4">
-          <h1 className="text-2xl md:text-3xl font-bold">{series.name}</h1>
-          {series.plot && (
-            <p className="text-muted-foreground">{series.plot}</p>
+          <h1 className="text-2xl md:text-3xl font-bold">{formattedSeries.name}</h1>
+          {formattedSeries.plot && (
+            <p className="text-muted-foreground">{formattedSeries.plot}</p>
           )}
-          {series.cast && (
+          {formattedSeries.cast && (
             <div>
               <h2 className="font-semibold mb-1">Cast</h2>
-              <p className="text-muted-foreground">{series.cast}</p>
+              <p className="text-muted-foreground">{formattedSeries.cast}</p>
             </div>
           )}
-          {series.director && (
+          {formattedSeries.director && (
             <div>
               <h2 className="font-semibold mb-1">Director</h2>
-              <p className="text-muted-foreground">{series.director}</p>
+              <p className="text-muted-foreground">{formattedSeries.director}</p>
             </div>
           )}
-          {series.genre && (
+          {formattedSeries.genre && (
             <div>
               <h2 className="font-semibold mb-1">Genre</h2>
-              <p className="text-muted-foreground">{series.genre}</p>
+              <p className="text-muted-foreground">{formattedSeries.genre}</p>
             </div>
           )}
-          {series.rating && (
+          {formattedSeries.rating && (
             <div>
               <h2 className="font-semibold mb-1">Rating</h2>
-              <p className="text-muted-foreground">{series.rating}/10</p>
+              <p className="text-muted-foreground">{formattedSeries.rating}/10</p>
             </div>
           )}
         </div>
@@ -104,8 +141,8 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
         {selectedEpisode ? (
           <div className="rounded-lg overflow-hidden">
             <VideoPlayer
-              src={getStreamUrl( selectedEpisode.id, 'series')}
-              poster={selectedEpisode.info?.movie_image || series.cover}
+              src={getStreamUrl(selectedEpisode.id, 'series')}
+              poster={selectedEpisode.info?.movie_image || formattedSeries.cover}
             />
           </div>
         ) : (
@@ -117,7 +154,7 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
         {/* Season and episode selection */}
         <div className="space-y-4">
           <div className="flex gap-2 overflow-x-auto pb-4">
-            {series.seasons?.map((season: any) => (
+            {formattedSeries.seasons?.map((season: any) => (
               <button
                 key={season.season_number}
                 onClick={() => setSelectedSeason(season.season_number)}
@@ -131,7 +168,7 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {series.seasons
+            {formattedSeries.seasons
               ?.find((s: any) => s.season_number === selectedSeason)
               ?.episodes.map((episode: any) => (
                 <button
