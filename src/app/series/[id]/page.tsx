@@ -19,6 +19,7 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
   const [selectedEpisode, setSelectedEpisode] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [formattedSeries, setFormattedSeries] = useState<any>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -26,16 +27,25 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
       try {
         const seriesData = await fetchFromApi(`get_series_info&series_id=${params.id}`);
         setSeries(seriesData);
+        console.log("API Response:", seriesData); // Log the API response
 
         // Format the series data into the desired JSON structure
         const formatted = formatSeriesData(seriesData);
         setFormattedSeries(formatted);
+        console.log("Formatted JSON:", formatted); // Log the formatted JSON
 
          // Select first episode of first season by default
         if (formatted && formatted.seasons && formatted.seasons[0] && formatted.seasons[0].episodes[0]) {
           setSelectedSeason(1);
           setSelectedEpisode(formatted.seasons[0].episodes[0]);
         }
+
+        // Create a download URL for the formatted JSON data
+        const jsonString = JSON.stringify(formatted, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        setDownloadUrl(url);
+
       } catch (error) {
         console.error('Failed to fetch series data:', error);
       } finally {
@@ -202,6 +212,11 @@ export default function SeriesDetails(props: SeriesDetailsProps) {
           </div>
         </div>
       </div>
+      {downloadUrl && (
+        <a href={downloadUrl} download="series_data.json">
+          Download JSON
+        </a>
+      )}
     </div>
   );
 }
