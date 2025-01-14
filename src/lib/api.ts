@@ -52,6 +52,10 @@ export async function getStreamUrl(streamId: number, streamType: 'live' | 'movie
   return `${baseUrl}/${streamType}/${username}/${password}/${streamId}.m3u8`;
 }
 
+export async function getSeriesInfo(seriesId: number) {
+  return fetchFromApi('get_series_info', { series_id: seriesId.toString() });
+}
+
 export async function verifyIPTVCredentials(url: string, username: string, password: string) {
   try {
     const searchParams = new URLSearchParams({
