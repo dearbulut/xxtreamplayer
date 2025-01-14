@@ -4,15 +4,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'tvsmart.vip',
-      },
-      {
-        protocol: 'http',
-        hostname: 'fanc.tmsimg.com',
+        hostname: '*',
       },
       {
         protocol: 'https',
-        hostname: 'image.tmdb.org',
+        hostname: '*',
       }
     ],
   },
